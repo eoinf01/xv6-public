@@ -22,6 +22,8 @@ void            cprintf(char*, ...);
 void            consoleintr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
 
+
+
 // exec.c
 int             exec(char*, char**);
 
@@ -120,6 +122,7 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+struct proc* getptable_proc(void);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

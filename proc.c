@@ -88,6 +88,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->trace = 0;
+  p->num_of_sys_calls = 0;
 
   release(&ptable.lock);
 
@@ -531,4 +533,8 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+//get the ptable
+struct proc* getptable_proc(void){
+  return ptable.proc;
 }

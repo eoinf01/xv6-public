@@ -374,26 +374,64 @@ bmap(struct inode *ip, uint bn)
 {
   uint addr, *a;
   struct buf *bp;
-
+  // check block number is less than direct block size.
   if(bn < NDIRECT){
+    //if direct block is not allocated, allocate it.
     if((addr = ip->addrs[bn]) == 0)
       ip->addrs[bn] = addr = balloc(ip->dev);
     return addr;
   }
+  //reset logical block number to 0
   bn -= NDIRECT;
-
   if(bn < NINDIRECT){
     // Load indirect block, allocating if necessary.
     if((addr = ip->addrs[NDIRECT]) == 0)
       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
+    //load indirect block
     bp = bread(ip->dev, addr);
+    //load indirect block addresses
     a = (uint*)bp->data;
+    //allocate block if not allocated.
     if((addr = a[bn]) == 0){
       a[bn] = addr = balloc(ip->dev);
       log_write(bp);
     }
     brelse(bp);
     return addr;
+  }
+  //reset logical block number to 0
+  bn -= NINDIRECT;
+  // check block number is less than double indirect block size.
+  if(bn < DNINDIRECT){
+    //load double indirect block, allocating if necessary.
+    if((addr = ip->addrs[NDIRECT + 1]) == 0)
+      ip->addrs[NDIRECT + 1] = addr = balloc(ip->dev);
+    
+    //load 1st layer block.
+    bp = bread(ip->dev, addr);
+    //get 1st layer block addresses
+    a = (uint*)bp->data;
+    //index into the indirect block into the double indirect block.
+    uint first_index = bn / NINDIRECT;
+    if((addr = a[first_index]) == 0){
+      a[first_index] = addr = balloc(ip->dev);
+      log_write(bp);
+    }
+    //free the buffer.
+    brelse(bp);
+
+    //get the array of addresses from the indirect block.
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+    uint second_index = bn % NINDIRECT;
+    if ((addr = a[second_index]) == 0) {
+      a[second_index] = addr = balloc(ip->dev);
+      log_write(bp);
+    }
+    brelse(bp);
+    //return the address of the block.
+    return addr;
+
   }
 
   panic("bmap: out of range");

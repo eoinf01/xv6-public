@@ -1,8 +1,12 @@
 struct stat;
 struct rtcdate;
+struct uproc;
 
 // system calls
 int fork(void);
+int trace(int);
+//function takes an int as an argument and uproc struct as a pointer
+int getprocs(int, struct uproc*);
 int exit(void) __attribute__((noreturn));
 int wait(void);
 int pipe(int*);
